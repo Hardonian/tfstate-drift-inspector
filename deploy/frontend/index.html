@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tfstate-drift-inspector — Dashboard</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --border: #1e1e2e;
+            --text: #e4e4ef;
+            --text-dim: #8888a0;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --green: #00d68f;
+            --red: #ff4757;
+            --orange: #ffa502;
+            --yellow: #ffd43b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0 2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        .logo { font-size: 1.25rem; font-weight: 700; color: var(--accent-light); }
+        .logo span { color: var(--text-dim); font-weight: 400; font-size: 0.85rem; margin-left: 0.5rem; }
+        .nav { display: flex; gap: 1.5rem; }
+        .nav a { color: var(--text-dim); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .nav a:hover { color: var(--accent-light); }
+
+        /* Stats Grid */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+        .stat-value { font-size: 2rem; font-weight: 800; }
+        .stat-label { color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat.critical .stat-value { color: var(--red); }
+        .stat.high .stat-value { color: var(--orange); }
+        .stat.clean .stat-value { color: var(--green); }
+
+        /* Scan Button */
+        .actions { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.7rem 1.25rem; border-radius: 8px; font-size: 0.9rem;
+            font-weight: 600; text-decoration: none; border: none; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-light); }
+        .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Scans Table */
+        .scans { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .scans-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+        .scans-header h2 { font-size: 1rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 0.75rem 1.25rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+        td { padding: 0.75rem 1.25rem; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(108, 92, 231, 0.05); }
+
+        .badge {
+            display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        .badge-critical { background: rgba(255, 71, 87, 0.15); color: var(--red); }
+        .badge-high { background: rgba(255, 165, 2, 0.15); color: var(--orange); }
+        .badge-medium { background: rgba(255, 212, 59, 0.15); color: var(--yellow); }
+        .badge-clean { background: rgba(0, 214, 143, 0.15); color: var(--green); }
+
+        /* Loading */
+        .loading { text-align: center; padding: 3rem; color: var(--text-dim); }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 0.5rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Empty State */
+        .empty { text-align: center; padding: 4rem 2rem; color: var(--text-dim); }
+        .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+        /* Footer */
+        .footer { text-align: center; padding: 3rem 0; color: var(--text-dim); font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">tfstate-drift-inspector <span>v0.1</span></div>
+            <nav class="nav">
+                <a href="#dashboard">Dashboard</a>
+                <a href="#workspaces">Workspaces</a>
+                <a href="#history">History</a>
+                <a href="#settings">Settings</a>
+            </nav>
+        </header>
+
+        <section class="stats" id="stats">
+            <div class="stat critical"><div class="stat-value" id="stat-critical">-</div><div class="stat-label">Critical</div></div>
+            <div class="stat high"><div class="stat-value" id="stat-high">-</div><div class="stat-label">High</div></div>
+            <div class="stat"><div class="stat-value" id="stat-total">-</div><div class="stat-label">Total Drift</div></div>
+            <div class="stat clean"><div class="stat-value" id="stat-scans">-</div><div class="stat-label">Scans (7d)</div></div>
+        </section>
+
+        <section class="actions">
+            <button class="btn btn-primary" id="scan-btn" onclick="triggerScan()">🔄 Run Scan Now</button>
+            <button class="btn btn-secondary" onclick="loadStats()">📊 Refresh Stats</button>
+        </section>
+
+        <section class="scans" id="dashboard">
+            <div class="scans-header">
+                <h2>Recent Scans</h2>
+                <span id="scan-count"></span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Critical</th>
+                        <th>High</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="scans-body">
+                    <tr><td colspan="6" class="loading"><span class="spinner"></span> Loading...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer class="footer">
+            <p>tfstate-drift-inspector — Free tier on Cloudflare Workers + D1</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats?days=7`);
+                const data = await res.json();
+                document.getElementById('stat-critical').textContent = data.total_critical || 0;
+                document.getElementById('stat-high').textContent = data.total_items - (data.total_critical || 0) || 0;
+                document.getElementById('stat-total').textContent = data.total_items || 0;
+                document.getElementById('stat-scans').textContent = data.total_scans || 0;
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        async function loadHistory() {
+            const tbody = document.getElementById('scans-body');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading"><span class="spinner"></span> Loading...</td></tr>';
+
+            try {
+                const res = await fetch(`${API_BASE}/history?limit=20`);
+                const data = await res.json();
+
+                if (!data.scans || data.scans.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty"><div class="empty-icon">🔍</div>No scans yet. Click "Run Scan Now" to get started.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.scans.map(scan => `
+                    <tr>
+                        <td><strong>${scan.workspace_name}</strong></td>
+                        <td>${new Date(scan.scanned_at).toLocaleString()}</td>
+                        <td>${scan.has_drift
+                            ? `<span class="badge badge-${scan.critical_count > 0 ? 'critical' : scan.high_count > 0 ? 'high' : 'medium'}">Drift</span>`
+                            : '<span class="badge badge-clean">Clean</span>'}</td>
+                        <td>${scan.critical_count || 0}</td>
+                        <td>${scan.high_count || 0}</td>
+                        <td>${scan.total_items || 0}</td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('scan-count').textContent = `${data.scans.length} scans`;
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty">Failed to load history. Check API connection.</td></tr>`;
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        async function triggerScan() {
+            const btn = document.getElementById('scan-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Scanning...';
+
+            try {
+                const res = await fetch(`${API_BASE}/scan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workspace_name: 'demo-workspace',
+                        workspace_path: '/tmp/demo',
+                    }),
+                });
+                const data = await res.json();
+                alert(data.message || 'Scan triggered!');
+                setTimeout(loadHistory, 2000);
+            } catch (e) {
+                alert('Failed to trigger scan: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Run Scan Now';
+            }
+        }
+
+        // Load on page load
+        loadStats();
+        loadHistory();
+    </script>
+</body>
+</html>

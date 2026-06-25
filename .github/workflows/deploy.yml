@@ -1,0 +1,73 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -e ".[deploy]"
+
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ github.repository }}:sha-${{ github.sha }} .
+
+      - name: Run tests
+        run: |
+          pip install -e ".[dev]"
+          pytest tests/ -x -q
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: deploy/workers
+          command: deploy --minify
+
+      - name: Smoke test
+        run: |
+
+          curl -s https://drift-inspector.${{ secrets.CF_WORKERS_DOMAIN }}/health | python3 -m json.tool
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: tfstate-drift-inspector
+          directory: deploy/frontend
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      # Optional: also deploy the landing page
+      - name: Deploy landing page
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: tfstate-drift-inspector-landing
+          directory: deploy/landing
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

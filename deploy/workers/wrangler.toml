@@ -1,0 +1,30 @@
+name = "tfstate-drift-inspector"
+main = "src/worker.js"
+compatibility_date = "2024-06-01"
+
+# Environment variables (non-sensitive)
+[vars]
+ENVIRONMENT = "production"
+APP_NAME = "tfstate-drift-inspector"
+SCAN_CRON = "0 2 * * *"
+LOG_LEVEL = "INFO"
+
+# Secrets (set via `wrangler secret put`)
+# CF_API_TOKEN
+# GITHUB_APP_ID
+# GITHUB_APP_PRIVATE_KEY
+# SLACK_BOT_TOKEN
+# STRIPE_SECRET_KEY
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "drift_inspector"
+database_id = "placeholder-id"  # Fill after `wrangler d1 create`
+
+# Routes
+routes = [{ pattern = "drift-inspector.example.com", custom_domain = true }]
+
+# Cron trigger
+[triggers]
+crons = ["0 2 * * *"]
