@@ -1,9 +1,33 @@
 # Variables
 
-variable "fly_token" {
-  description = "Fly.io API token"
+variable "app_name" {
+  description = "Fly.io app name"
   type        = string
-  sensitive   = true
+  default     = "tfstate-drift-inspector"
+}
+
+variable "region" {
+  description = "Fly.io region"
+  type        = string
+  default     = "iad"
+}
+
+variable "environment" {
+  description = "Environment (staging, production)"
+  type        = string
+  default     = "production"
+}
+
+variable "image" {
+  description = "Docker image"
+  type        = string
+  default     = "ghcr.io/hardonian/tfstate-drift-inspector"
+}
+
+variable "image_tag" {
+  description = "Docker image tag"
+  type        = string
+  default     = "latest"
 }
 
 variable "github_app_id" {
@@ -56,20 +80,14 @@ variable "stripe_price_id_monthly" {
   default     = ""
 }
 
-variable "app_name" {
-  description = "Fly.io app name"
+variable "scan_cron" {
+  description = "Cron schedule for nightly scans"
   type        = string
-  default     = "tfstate-drift-inspector"
+  default     = "0 2 * * *"
 }
 
-variable "region" {
-  description = "Fly.io region"
+variable "log_level" {
+  description = "Log level"
   type        = string
-  default     = "iad"
-}
-
-variable "environment" {
-  description = "Environment (staging, production)"
-  type        = string
-  default     = "production"
+  default     = "INFO"
 }
