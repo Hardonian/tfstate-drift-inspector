@@ -1,0 +1,18 @@
+{
+  "workspaces": [
+    {
+      "name": "ai-lab-infra",
+      "path": "/home/scott/ai-lab/infra",
+      "repo_full_name": "Hardonian/ai-lab",
+      "branch": "main"
+    }
+  ],
+  "settings": {
+    "severity_filter": null,
+    "include_metadata": false,
+    "auto_create_pr": false,
+    "slack_alert_on_critical": true,
+    "slack_alert_on_high": true,
+    "slack_digest_daily": true
+  }
+}

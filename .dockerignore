@@ -1,0 +1,22 @@
+# Ignore everything not needed in the Docker image
+.git
+.github
+.gitignore
+.env
+.env.*
+*.pyc
+__pycache__
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.venv
+venv
+*.egg-info
+dist
+build
+.terraform
+*.tfstate
+*.tfstate.backup
+workspace_config.json
+fly.toml
