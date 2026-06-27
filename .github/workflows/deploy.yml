@@ -47,6 +47,9 @@ jobs:
         continue-on-error: true
         working-directory: deploy/workers
         run: wrangler d1 create drift_inspector || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Get D1 database ID and update wrangler.toml
         working-directory: deploy/workers
@@ -59,6 +62,9 @@ jobs:
             echo "No D1 database found with name drift_inspector"
             exit 1
           fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Apply D1 schema
         continue-on-error: true
@@ -68,6 +74,9 @@ jobs:
           if [ -n "$DB_ID" ]; then
             wrangler d1 execute drift_inspector --remote --file=../d1/schema.sql
           fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Deploy to Cloudflare Workers
         working-directory: deploy/workers
