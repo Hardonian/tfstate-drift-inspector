@@ -22,9 +22,6 @@ binding = "DB"
 database_name = "drift_inspector"
 database_id = "placeholder-id"  # Fill after `wrangler d1 create`
 
-# Routes
-routes = [{ pattern = "drift-inspector.example.com", custom_domain = true }]
-
 # Cron trigger
 [triggers]
 crons = ["0 2 * * *"]

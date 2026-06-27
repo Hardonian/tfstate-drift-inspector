@@ -39,18 +39,22 @@ jobs:
       - name: Install wrangler
         run: npm install -g wrangler
 
+      - name: Install worker dependencies
+        working-directory: deploy/workers
+        run: npm ci
+
       - name: Create D1 database (idempotent)
         continue-on-error: true
         working-directory: deploy/workers
-        run: wrangler d1 create drift_db || true
+        run: wrangler d1 create drift_inspector || true
 
       - name: Apply D1 schema
         continue-on-error: true
         working-directory: deploy/workers
         run: |
-          DB_ID=$(wrangler d1 list --json 2>/dev/null | python3 -c "import sys,json; dbs=json.load(sys.stdin); print([d['id'] for d in dbs if d.get('name')=='drift_db'][0])" 2>/dev/null || echo "")
+          DB_ID=$(wrangler d1 list --json 2>/dev/null | python3 -c "import sys,json; dbs=json.load(sys.stdin); print([d['id'] for d in dbs if d.get('name')=='drift_inspector'][0])" 2>/dev/null || echo "")
           if [ -n "$DB_ID" ]; then
-            wrangler d1 execute drift_db --remote --file=../d1/schema.sql
+            wrangler d1 execute drift_inspector --remote --file=../d1/schema.sql
           fi
 
       - name: Deploy to Cloudflare Workers
