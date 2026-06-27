@@ -41,7 +41,7 @@ jobs:
 
       - name: Install worker dependencies
         working-directory: deploy/workers
-        run: npm ci
+        run: npm install
 
       - name: Create D1 database (idempotent)
         continue-on-error: true
