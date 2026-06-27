@@ -80,21 +80,25 @@ class TestSlackClient:
         assert response["ok"] is True
 
     @patch("drift_inspector.slack_integration.WebClient")
-    def test_send_drift_alert(self, mock_webclient, slack, sample_result):
+    def test_send_drift_alert(self, mock_webclient_class, slack, sample_result):
         """Drift alert should call chat_postMessage."""
         mock_client = MagicMock()
-        mock_client.chat_post_message.return_value = {"ts": "123.456"}
-        slack._client = mock_client
+        mock_client.chat_postMessage.return_value = {"ts": "123.456", "channel": "#test"}
+        mock_webclient_class.return_value = mock_client
+        # Reset the cached client so it uses our mock
+        slack._client = None
 
         slack.send_drift_alert(sample_result)
-        mock_client.chat_post_message.assert_called_once()
+        mock_client.chat_postMessage.assert_called_once()
 
     @patch("drift_inspector.slack_integration.WebClient")
-    def test_send_daily_digest(self, mock_webclient, slack, sample_result):
+    def test_send_daily_digest(self, mock_webclient_class, slack, sample_result):
         """Daily digest should include all workspaces."""
         mock_client = MagicMock()
-        mock_client.chat_post_message.return_value = {"ts": "123.456"}
-        slack._client = mock_client
+        mock_client.chat_postMessage.return_value = {"ts": "123.456", "channel": "#test"}
+        mock_webclient_class.return_value = mock_client
+        # Reset the cached client so it uses our mock
+        slack._client = None
 
         slack.send_daily_digest([sample_result])
-        mock_client.chat_post_message.assert_called_once()
+        mock_client.chat_postMessage.assert_called_once()

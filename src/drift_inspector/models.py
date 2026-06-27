@@ -2,23 +2,21 @@
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import (
+    JSON,
+    Boolean,
     Column,
     DateTime,
+    Index,
     Integer,
     String,
     Text,
-    Boolean,
-    JSON,
     create_engine,
-    Index,
 )
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from drift_inspector.config import get_settings
 
@@ -37,8 +35,8 @@ class Workspace(Base):
     path = Column(String(1024))
     installation_id = Column(Integer)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     __table_args__ = (
         Index("idx_workspace_name", "name"),
@@ -64,7 +62,7 @@ class DriftScan(Base):
     terraform_version = Column(String(50))
     plan_exit_code = Column(Integer)
     duration_ms = Column(Integer)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     __table_args__ = (
         Index("idx_scan_workspace", "workspace_id"),
@@ -85,7 +83,7 @@ class DriftItemRecord(Base):
     planned_action = Column(String(20), nullable=False)
     detail = Column(JSON)
     raw_change = Column(JSON)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     __table_args__ = (
         Index("idx_item_scan", "scan_id"),
@@ -105,8 +103,8 @@ class RemediationPR(Base):
     pr_url = Column(String(1024))
     branch_name = Column(String(255))
     status = Column(String(50), default="open")  # open, merged, closed, superseded
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
 
 class Database:
@@ -137,7 +135,18 @@ class Database:
         """Record a drift scan result. Returns scan ID."""
         session = self.get_session()
         try:
+            # Get or create workspace
+            workspace = session.query(Workspace).filter(Workspace.name == result.workspace_name).first()
+            if not workspace:
+                workspace = Workspace(
+                    name=result.workspace_name,
+                    path=str(getattr(result, 'workspace_path', '')),
+                )
+                session.add(workspace)
+                session.flush()
+
             scan = DriftScan(
+                workspace_id=workspace.id,
                 workspace_name=result.workspace_name,
                 scanned_at=result.scanned_at,
                 has_drift=result.has_drift,
@@ -168,13 +177,13 @@ class Database:
 
             session.commit()
             return scan.id
-        except Exception as e:
+        except Exception:
             session.rollback()
-            raise e
+            raise
         finally:
             session.close()
 
-    def get_recent_scans(self, limit: int = 30, workspace_name: Optional[str] = None) -> list[dict]:
+    def get_recent_scans(self, limit: int = 30, workspace_name: str | None = None) -> list[dict]:
         """Get recent scan results."""
         session = self.get_session()
         try:
@@ -222,7 +231,7 @@ class Database:
         from datetime import timedelta
         session = self.get_session()
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            cutoff = datetime.now(UTC) - timedelta(days=days)
             scans = session.query(DriftScan).filter(DriftScan.scanned_at >= cutoff).all()
 
             total_scans = len(scans)

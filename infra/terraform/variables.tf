@@ -31,13 +31,15 @@ variable "image_tag" {
 }
 
 variable "github_app_id" {
-  description = "GitHub App ID"
+  description = "GitHub App ID (optional for non-GitHub features)"
   type        = string
+  default     = ""
 }
 
 variable "github_private_key" {
-  description = "GitHub App private key (PEM)"
+  description = "GitHub App private key (PEM) (optional for non-GitHub features)"
   type        = string
+  default     = ""
   sensitive   = true
 }
 

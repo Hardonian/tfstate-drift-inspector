@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import json
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
 import structlog
 import typer
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.syntax import Syntax
+from rich.table import Table
 
-from drift_inspector.config import get_settings, Settings
+from drift_inspector.config import get_settings
 from drift_inspector.engine import DriftEngine, DriftResult, Severity
 from drift_inspector.models import Database
 
@@ -46,9 +43,9 @@ def setup_logging(level: str = "INFO"):
 @app.command()
 def scan(
     workspace_path: str = typer.Argument(..., help="Path to Terraform workspace"),
-    workspace_name: Optional[str] = typer.Option(None, "--name", "-n", help="Workspace name (defaults to directory name)"),
+    workspace_name: str | None = typer.Option(None, "--name", "-n", help="Workspace name (defaults to directory name)"),
     output: str = typer.Option("table", "--output", "-o", help="Output format: table, json, markdown"),
-    severity_filter: Optional[str] = typer.Option(None, "--severity", "-s", help="Filter: critical, high, medium, low"),
+    severity_filter: str | None = typer.Option(None, "--severity", "-s", help="Filter: critical, high, medium, low"),
     metadata: bool = typer.Option(False, "--metadata", "-m", help="Include metadata-only changes"),
 ):
     """Scan a Terraform workspace for drift."""
@@ -123,7 +120,7 @@ def scan_all(
 @app.command()
 def alert(
     workspace_path: str = typer.Argument(..., help="Path to Terraform workspace"),
-    channel: Optional[str] = typer.Option(None, "--channel", "-c", help="Slack channel override"),
+    channel: str | None = typer.Option(None, "--channel", "-c", help="Slack channel override"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be sent without sending"),
 ):
     """Scan and send Slack alert if drift detected."""
@@ -175,7 +172,7 @@ def pr(
 
     if dry_run:
         console.print(f"[yellow]DRY RUN:[/yellow] Would create PR on {repo}")
-        console.print(f"  Branch: drift-remediation/{path.name}-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}")
+        console.print(f"  Branch: drift-remediation/{path.name}-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}")
         console.print(f"  Items: {result.summary['total']}")
         return
 
@@ -189,7 +186,7 @@ def pr(
 
 @app.command()
 def history(
-    workspace: Optional[str] = typer.Option(None, "--workspace", "-w", help="Filter by workspace"),
+    workspace: str | None = typer.Option(None, "--workspace", "-w", help="Filter by workspace"),
     days: int = typer.Option(7, "--days", "-d", help="Days of history"),
     limit: int = typer.Option(20, "--limit", "-l", help="Max results"),
 ):

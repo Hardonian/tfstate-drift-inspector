@@ -23,6 +23,8 @@ dependencies = [
     "typer>=0.12.0",
     "python-dotenv>=1.0.0",
     "croniter>=2.0.0",
+    "uvicorn>=0.30.0",
+    "fastapi>=0.111.0",
 ]
 
 [project.optional-dependencies]
@@ -50,7 +52,7 @@ drift-pr = "drift_inspector.pr:main"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-select = ["E", "F", "I", "UP", "W", "C4", "PT", "PLE", "PLR", "PLW", "TRY", "T20", "ARG", "PTH", "ERA", "PD", "PGH", "PIE", "QF", "SIM", "TID", "EXE", "FUR", "LOG", "NPY", "RET", "PERF", "INT", "ICN", "DTZ", "FIX", "FLY", "RSE", "ASYNC"]
+select = ["E", "F", "I", "UP", "W", "C4", "PT", "PLE", "PLR", "PLW", "TRY", "T20", "ARG", "PTH", "ERA", "PD", "PGH", "PIE", "SIM", "TID", "EXE", "LOG", "NPY", "RET", "PERF", "INT", "ICN", "DTZ", "FIX", "FLY", "RSE", "ASYNC"]
 ignore = ["S101", "PT004", "PT007", "PT012", "PT015", "PTH101", "PTH102", "PTH103", "PTH104", "PTH105", "PTH106", "PTH107", "PTH108", "PTH109", "PTH110", "PTH111", "PTH112", "PTH113", "PTH114", "PTH115", "PTH116", "PTH117", "PTH118", "PTH119", "PTH120"]
 
 [tool.mypy]

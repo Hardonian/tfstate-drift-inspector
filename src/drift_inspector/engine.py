@@ -3,18 +3,15 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
-import tempfile
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 from python_terraform import Terraform
-from pydantic import BaseModel, Field
 
 from drift_inspector.config import get_settings
 
@@ -67,7 +64,7 @@ class DriftResult:
     scanned_at: datetime
     has_drift: bool
     drift_items: list[DriftItem] = field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
     terraform_version: str = ""
     plan_exit_code: int = 0
     plan_output: str = ""
@@ -160,7 +157,7 @@ class DriftEngine:
             working_dir=str(workspace_dir),
             terraform_bin_path=self.settings.terraform_path,
             variables={},
-            environment=os.environ.copy(),
+            is_env_vars_included=True,
         )
 
     def _run_terraform_version(self) -> str:
@@ -245,9 +242,7 @@ class DriftEngine:
                 drift_type = DriftType.RESOURCE_ADDED
             elif change_type == "delete":
                 drift_type = DriftType.RESOURCE_REMOVED
-            elif change_type == "update":
-                drift_type = DriftType.RESOURCE_CHANGED
-            elif change_type == "replace":
+            elif change_type in {"update", "replace"}:
                 drift_type = DriftType.RESOURCE_CHANGED
             else:
                 drift_type = DriftType.RESOURCE_CHANGED
@@ -277,7 +272,7 @@ class DriftEngine:
     def scan_workspace(self, workspace_name: str, workspace_path: Path) -> DriftResult:
         """Scan a single Terraform workspace for drift."""
         start_time = time.time()
-        scanned_at = datetime.now(timezone.utc)
+        scanned_at = datetime.now(UTC)
 
         logger.info("Starting drift scan", workspace=workspace_name, path=str(workspace_path))
 
@@ -362,7 +357,7 @@ class DriftEngine:
             )
 
         except Exception as e:
-            logger.error("Drift scan failed", workspace=workspace_name, error=str(e))
+            logger.exception("Drift scan failed", workspace=workspace_name, error=str(e))
             return DriftResult(
                 workspace_name=workspace_name,
                 workspace_id="",
@@ -386,7 +381,7 @@ class DriftEngine:
                 results.append(DriftResult(
                     workspace_name=name,
                     workspace_id="",
-                    scanned_at=datetime.now(timezone.utc),
+                    scanned_at=datetime.now(UTC),
                     has_drift=False,
                     error=f"Path not found: {path}",
                 ))

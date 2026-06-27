@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any, Optional
-
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
-from pydantic import BaseModel
-
-from drift_inspector.config import get_settings
-from drift_inspector.engine import DriftResult, DriftItem, Severity
+from datetime import UTC, datetime
+from typing import Any
 
 import structlog
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+
+from drift_inspector.config import get_settings
+from drift_inspector.engine import DriftResult, Severity
 
 logger = structlog.get_logger(__name__)
 
@@ -24,8 +21,8 @@ class SlackMessage:
     """Slack message payload."""
     channel: str
     text: str
-    blocks: Optional[list[dict[str, Any]]] = None
-    thread_ts: Optional[str] = None
+    blocks: list[dict[str, Any]] | None = None
+    thread_ts: str | None = None
 
 
 class SlackClient:
@@ -33,7 +30,7 @@ class SlackClient:
 
     def __init__(self, settings=None):
         self.settings = settings or get_settings()
-        self._client: Optional[WebClient] = None
+        self._client: WebClient | None = None
 
     @property
     def client(self) -> WebClient:
@@ -54,10 +51,10 @@ class SlackClient:
             )
             return {"ok": True, "ts": response["ts"], "channel": response["channel"]}
         except SlackApiError as e:
-            logger.error("Failed to send Slack message", error=str(e))
+            logger.exception("Failed to send Slack message", error=str(e))
             return {"ok": False, "error": str(e)}
 
-    def send_drift_alert(self, result: DriftResult, channel: Optional[str] = None) -> dict[str, Any]:
+    def send_drift_alert(self, result: DriftResult, channel: str | None = None) -> dict[str, Any]:
         """Send a drift alert to Slack."""
         channel = channel or self.settings.slack_default_channel
 
@@ -136,7 +133,7 @@ class SlackClient:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"{severity_emoji} `{item.address}`\n{action_emoji} {item.planned_action} • {item.drift_type.value}",
+                        "text": f"{severity_emoji} `{item.address}`\n{action_emoji} {item.planned_action} • {item.drift_type}",
                     },
                 })
 
@@ -154,7 +151,7 @@ class SlackClient:
 
         return blocks
 
-    def send_daily_digest(self, results: list[DriftResult], channel: Optional[str] = None) -> dict[str, Any]:
+    def send_daily_digest(self, results: list[DriftResult], channel: str | None = None) -> dict[str, Any]:
         """Send a daily digest of all drift scans."""
         channel = channel or self.settings.slack_default_channel
 
@@ -173,7 +170,7 @@ class SlackClient:
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": f"📊 Daily Drift Digest — {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
+                    "text": f"📊 Daily Drift Digest — {datetime.now(UTC).strftime('%Y-%m-%d')}",
                     "emoji": True,
                 },
             },

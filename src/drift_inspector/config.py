@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-from typing import Optional
-
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -27,36 +23,36 @@ class Settings(BaseSettings):
     )
 
     # GitHub App
-    github_app_id: Optional[str] = Field(
+    github_app_id: str | None = Field(
         default=None,
         description="GitHub App ID for installation authentication",
     )
-    github_app_private_key: Optional[str] = Field(
+    github_app_private_key: str | None = Field(
         default=None,
         description="GitHub App private key (PEM format)",
     )
-    github_webhook_secret: Optional[str] = Field(
+    github_webhook_secret: str | None = Field(
         default=None,
         description="GitHub webhook secret for validation",
     )
 
     # GitHub OAuth (for user installations)
-    github_client_id: Optional[str] = Field(default=None)
-    github_client_secret: Optional[str] = Field(default=None)
+    github_client_id: str | None = Field(default=None)
+    github_client_secret: str | None = Field(default=None)
 
     # Slack
-    slack_bot_token: Optional[str] = Field(
+    slack_bot_token: str | None = Field(
         default=None,
         description="Slack Bot User OAuth Token (xoxb-)",
     )
-    slack_signing_secret: Optional[str] = Field(default=None)
+    slack_signing_secret: str | None = Field(default=None)
     slack_default_channel: str = Field(
         default="#devops-alerts",
         description="Default Slack channel for drift alerts",
     )
 
     # Email (SendGrid/SES)
-    sendgrid_api_key: Optional[str] = Field(default=None)
+    sendgrid_api_key: str | None = Field(default=None)
     alert_from_email: str = Field(default="drift-inspector@yourdomain.com")
     alert_to_emails: str = Field(default="", description="Comma-separated list")
 
@@ -83,16 +79,16 @@ class Settings(BaseSettings):
     port: int = Field(default=8080)
 
     # Stripe
-    stripe_secret_key: Optional[str] = Field(default=None)
-    stripe_webhook_secret: Optional[str] = Field(default=None)
-    stripe_price_id_monthly: Optional[str] = Field(default=None)
+    stripe_secret_key: str | None = Field(default=None)
+    stripe_webhook_secret: str | None = Field(default=None)
+    stripe_price_id_monthly: str | None = Field(default=None)
 
     @property
     def alert_email_list(self) -> list[str]:
         return [e.strip() for e in self.alert_to_emails.split(",") if e.strip()]
 
 
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def get_settings() -> Settings:

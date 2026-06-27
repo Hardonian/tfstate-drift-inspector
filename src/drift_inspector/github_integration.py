@@ -2,24 +2,19 @@
 
 from __future__ import annotations
 
-import base64
 import hashlib
 import hmac
 import json
-import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Optional
-
-from github import Github, GithubIntegration
-from github.Repository import Repository
-from pydantic import BaseModel
-
-from drift_inspector.config import get_settings
-from drift_inspector.engine import DriftItem, DriftResult, DriftType, Severity
+from datetime import UTC, datetime
+from typing import Any
 
 import structlog
+from github import Github, GithubIntegration
+from github.Repository import Repository
+
+from drift_inspector.config import get_settings
+from drift_inspector.engine import DriftResult, Severity
 
 logger = structlog.get_logger(__name__)
 
@@ -38,8 +33,8 @@ class GitHubClient:
 
     def __init__(self, settings=None):
         self.settings = settings or get_settings()
-        self._integration: Optional[GithubIntegration] = None
-        self._app_client: Optional[Github] = None
+        self._integration: GithubIntegration | None = None
+        self._app_client: Github | None = None
 
     @property
     def integration(self) -> GithubIntegration:
@@ -75,7 +70,7 @@ class GitHubClient:
         installation_id: int,
         repo_full_name: str,
         drift_result: DriftResult,
-        branch_name: Optional[str] = None,
+        branch_name: str | None = None,
     ) -> dict[str, Any]:
         """Create a remediation PR for drift findings."""
         client = self.get_installation_client(installation_id)
@@ -83,7 +78,7 @@ class GitHubClient:
 
         # Generate branch name
         if branch_name is None:
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
             branch_name = f"drift-remediation/{drift_result.workspace_name}-{timestamp}"
 
         # Get default branch
@@ -275,7 +270,7 @@ class WebhookHandler:
         if action == "created":
             logger.info("GitHub App installed", installation_id=installation.get("id"))
             return {"status": "installed", "installation_id": installation.get("id")}
-        elif action == "deleted":
+        if action == "deleted":
             logger.info("GitHub App uninstalled", installation_id=installation.get("id"))
             return {"status": "uninstalled", "installation_id": installation.get("id")}
 

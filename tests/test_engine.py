@@ -148,7 +148,7 @@ class TestDriftResult:
 
     def test_summary_counts(self):
         from datetime import datetime, timezone
-        from drift_inspector.engine import DriftItem
+        from drift_inspector.engine import DriftResult, DriftItem
 
         result = DriftResult(
             workspace_name="test",
@@ -186,6 +186,7 @@ class TestDriftResult:
 
     def test_to_dict(self):
         from datetime import datetime, timezone
+        from drift_inspector.engine import DriftResult
         result = DriftResult(
             workspace_name="test",
             workspace_id="test-1",

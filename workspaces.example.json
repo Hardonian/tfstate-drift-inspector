@@ -1,0 +1,16 @@
+{
+  "workspaces": [
+    {
+      "name": "infra-prod",
+      "path": "/path/to/infra-prod",
+      "repo_full_name": "your-org/infra-prod",
+      "installation_id": 123456
+    },
+    {
+      "name": "infra-staging",
+      "path": "/path/to/infra-staging",
+      "repo_full_name": "your-org/infra-staging",
+      "installation_id": 123456
+    }
+  ]
+}

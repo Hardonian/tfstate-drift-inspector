@@ -3,21 +3,19 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
 
-from fastapi import FastAPI, HTTPException, Request, Depends, Header
-from fastapi.responses import JSONResponse
+import structlog
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from drift_inspector.config import get_settings
 from drift_inspector.engine import DriftEngine
-from drift_inspector.models import Database
 from drift_inspector.github_integration import GitHubClient, WebhookHandler
-
-import structlog
+from drift_inspector.models import Database
 
 logger = structlog.get_logger(__name__)
 
@@ -40,13 +38,13 @@ app.add_middleware(
 class ScanRequest(BaseModel):
     workspace_name: str
     workspace_path: str
-    installation_id: Optional[int] = None
+    installation_id: int | None = None
 
 class WorkspaceConfig(BaseModel):
     name: str
     path: str
-    repo_full_name: Optional[str] = None
-    installation_id: Optional[int] = None
+    repo_full_name: str | None = None
+    installation_id: int | None = None
 
 class WorkspaceList(BaseModel):
     workspaces: list[WorkspaceConfig]
@@ -79,7 +77,7 @@ async def health():
     return HealthResponse(
         status="ok",
         version="0.1.0",
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 @app.post("/api/v1/scan")
@@ -136,7 +134,7 @@ async def scan_all(
 
 @app.get("/api/v1/history")
 async def get_history(
-    workspace: Optional[str] = None,
+    workspace: str | None = None,
     limit: int = 20,
     db: Database = Depends(get_db),
 ):
@@ -155,17 +153,16 @@ async def get_stats(
 @app.post("/api/v1/webhook/github")
 async def github_webhook(
     request: Request,
-    x_hub_signature_256: Optional[str] = Header(None),
-    x_github_event: Optional[str] = Header(None),
+    x_hub_signature_256: str | None = Header(None),
+    x_github_event: str | None = Header(None),
     github: GitHubClient = Depends(get_github),
 ):
     """Handle GitHub webhook events."""
     body = await request.body()
 
     # Verify signature
-    if x_hub_signature_256:
-        if not github.verify_webhook_signature(body, x_hub_signature_256):
-            raise HTTPException(status_code=403, detail="Invalid signature")
+    if x_hub_signature_256 and not github.verify_webhook_signature(body, x_hub_signature_256):
+        raise HTTPException(status_code=403, detail="Invalid signature")
 
     payload = json.loads(body)
     handler = WebhookHandler(github)
@@ -223,13 +220,12 @@ async def create_pr(
     result = DriftResult(
         workspace_name=items[0].get("workspace_name", "unknown"),
         workspace_id="",
-        scanned_at=datetime.now(timezone.utc),
+        scanned_at=datetime.now(UTC),
         has_drift=True,
         drift_items=[],
     )
 
     try:
-        pr_result = github.create_remediation_pr(installation_id, repo, result)
-        return pr_result
+        return github.create_remediation_pr(installation_id, repo, result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

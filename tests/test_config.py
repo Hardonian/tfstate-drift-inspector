@@ -24,7 +24,7 @@ class TestSettings:
     def test_slack_token_from_env(self, monkeypatch):
         """Should load SLACK_BOT_TOKEN from environment."""
         from drift_inspector.config import Settings
-        monkeypatch.setenv("SLACK_BOT_TOKEN", "***")
+        monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-test")
         settings = Settings()
         assert settings.slack_bot_token == "xoxb-test"
 
