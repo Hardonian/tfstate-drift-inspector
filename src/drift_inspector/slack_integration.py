@@ -133,7 +133,10 @@ class SlackClient:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"{severity_emoji} `{item.address}`\n{action_emoji} {item.planned_action} • {item.drift_type}",
+                        "text": (
+                            f"{severity_emoji} `{item.address}`\n"
+                            f"{action_emoji} {item.planned_action} \u2022 {item.drift_type}"
+                        ),
                     },
                 })
 

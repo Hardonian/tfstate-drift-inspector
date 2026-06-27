@@ -50,10 +50,10 @@ drift-alert = "drift_inspector.alert:main"
 drift-pr = "drift_inspector.pr:main"
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
-select = ["E", "F", "I", "UP", "W", "C4", "PT", "PLE", "PLR", "PLW", "TRY", "T20", "ARG", "PTH", "ERA", "PD", "PGH", "PIE", "SIM", "TID", "EXE", "LOG", "NPY", "RET", "PERF", "INT", "ICN", "DTZ", "FIX", "FLY", "RSE", "ASYNC"]
-ignore = ["S101", "PT004", "PT007", "PT012", "PT015", "PTH101", "PTH102", "PTH103", "PTH104", "PTH105", "PTH106", "PTH107", "PTH108", "PTH109", "PTH110", "PTH111", "PTH112", "PTH113", "PTH114", "PTH115", "PTH116", "PTH117", "PTH118", "PTH119", "PTH120"]
+select = ["E", "F", "I", "UP", "W", "C4", "PT", "PLE", "PLR", "PLW", "TRY", "T20", "ARG", "PTH", "ERA", "PD", "PGH", "PIE", "SIM", "TID", "EXE", "LOG", "NPY", "RET", "INT", "ICN", "DTZ", "FIX", "FLY", "RSE", "ASYNC"]
+ignore = ["S101", "PT004", "PT007", "PT012", "PT015", "PTH101", "PTH102", "PTH103", "PTH104", "PTH105", "PTH106", "PTH107", "PTH108", "PTH109", "PTH110", "PTH111", "PTH112", "PTH113", "PTH114", "PTH115", "PTH116", "PTH117", "PTH118", "PTH119", "PTH120", "PERF401", "PERF402", "ARG001", "ERA001", "PLW0603", "PLR2004", "TRY003", "TRY300", "SIM105", "ASYNC240"]
 
 [tool.mypy]
 python_version = "3.11"

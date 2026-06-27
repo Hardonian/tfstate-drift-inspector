@@ -168,6 +168,7 @@ class DriftEngine:
                 capture_output=True,
                 text=True,
                 timeout=10,
+                check=False,
             )
             if result.returncode == 0:
                 data = json.loads(result.stdout)

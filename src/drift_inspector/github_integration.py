@@ -239,7 +239,8 @@ class GitHubClient:
 This PR was created automatically by **tfstate-drift-inspector**.
 See the attached files for complete drift analysis.
 
-> **Note:** Critical/High severity items should be addressed immediately as they may indicate security or compliance risks.
+> **Note:** Critical/High severity items should be addressed
+> immediately as they may indicate security or compliance risks.
 """
 
     def verify_webhook_signature(self, payload: bytes, signature: str) -> bool:
