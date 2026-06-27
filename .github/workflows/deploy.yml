@@ -48,6 +48,18 @@ jobs:
         working-directory: deploy/workers
         run: wrangler d1 create drift_inspector || true
 
+      - name: Get D1 database ID and update wrangler.toml
+        working-directory: deploy/workers
+        run: |
+          DB_ID=$(wrangler d1 list --json 2>/dev/null | python3 -c "import sys,json; dbs=json.load(sys.stdin); print([d['id'] for d in dbs if d.get('name')=='drift_inspector'][0])" 2>/dev/null || echo "")
+          if [ -n "$DB_ID" ]; then
+            echo "Found D1 database ID: $DB_ID"
+            sed -i "s/database_id = \"placeholder-id\"/database_id = \"$DB_ID\"/" wrangler.toml
+          else
+            echo "No D1 database found with name drift_inspector"
+            exit 1
+          fi
+
       - name: Apply D1 schema
         continue-on-error: true
         working-directory: deploy/workers
