@@ -25,3 +25,6 @@ database_id = "placeholder-id"  # Fill after `wrangler d1 create`
 # Cron trigger
 [triggers]
 crons = ["0 2 * * *"]
+
+# Routes (workers.dev subdomain or custom domain)
+# routes = [{ pattern = "tfstate-drift-inspector.your-subdomain.workers.dev", custom_domain = false }]
