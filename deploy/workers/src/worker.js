@@ -9,10 +9,17 @@ const router = Router();
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
+const CORS_HEADERS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: CORS_HEADERS,
   });
 }
 
@@ -21,6 +28,8 @@ function error(message, status = 400) {
 }
 
 // ─── Health Check ─────────────────────────────────────────────────
+
+router.options('*', () => new Response(null, { status: 204, headers: CORS_HEADERS }));
 
 router.get('/health', () => {
   return json({
@@ -48,11 +57,25 @@ router.post('/api/v1/scan', async (request, env) => {
   // 4. Store results in D1
   // 5. Send alerts if drift detected
 
+  // Ensure workspace exists first so drift_scans.workspace_id is valid
+  const workspaceLookup = await env.DB.prepare(
+    'SELECT id FROM workspaces WHERE name = ?'
+  ).bind(workspace_name).first();
+
+  let workspaceId = workspaceLookup?.id;
+  if (!workspaceId) {
+    const insertWorkspace = await env.DB.prepare(
+      `INSERT INTO workspaces (name, path, is_active, created_at, updated_at)
+       VALUES (?, ?, 1, datetime('now'), datetime('now'))`
+    ).bind(workspace_name, workspace_path).run();
+    workspaceId = insertWorkspace.meta.last_row_id;
+  }
+
   // For now, record the scan request
   const stmt = env.DB.prepare(
-    `INSERT INTO drift_scans (workspace_name, scanned_at, has_drift, total_items)
-     VALUES (?, datetime('now'), 0, 0)`
-  ).bind(workspace_name);
+    `INSERT INTO drift_scans (workspace_id, workspace_name, scanned_at, has_drift, total_items, critical_count, high_count, medium_count, low_count)
+     VALUES (?, ?, datetime('now'), 0, 0, 0, 0, 0, 0)`
+  ).bind(workspaceId, workspace_name);
   const result = await stmt.run();
 
   return json({

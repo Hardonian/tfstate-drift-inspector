@@ -155,7 +155,8 @@
     </div>
 
     <script>
-        const API_BASE = '/api/v1';
+        const API_ORIGIN = 'https://tfstate-drift-inspector.scottrmhardie.workers.dev';
+        const API_BASE = `${API_ORIGIN}/api/v1`;
 
         async function loadStats() {
             try {
