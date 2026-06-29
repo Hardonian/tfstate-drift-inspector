@@ -45,9 +45,6 @@ fly = [
 
 [project.scripts]
 drift-inspector = "drift_inspector.cli:app"
-drift-scan = "drift_inspector.scan:main"
-drift-alert = "drift_inspector.alert:main"
-drift-pr = "drift_inspector.pr:main"
 
 [tool.ruff]
 line-length = 120
