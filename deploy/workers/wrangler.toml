@@ -20,7 +20,7 @@ LOG_LEVEL = "INFO"
 [[d1_databases]]
 binding = "DB"
 database_name = "drift_inspector"
-database_id = "placeholder-id"  # Fill after `wrangler d1 create`
+database_id = "a363fbfe-687a-44ae-98de-72766a0674f7"
 
 # Cron trigger
 [triggers]
