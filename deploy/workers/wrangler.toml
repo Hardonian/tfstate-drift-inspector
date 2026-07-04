@@ -27,4 +27,3 @@ database_id = "a363fbfe-687a-44ae-98de-72766a0674f7"
 crons = ["0 2 * * *"]
 
 # Routes (workers.dev subdomain or custom domain)
-# routes = [{ pattern = "tfstate-drift-inspector.your-subdomain.workers.dev", custom_domain = false }]
