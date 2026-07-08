@@ -38,3 +38,10 @@ Thumbs.db
 
 # Local runtime state
 drift_inspector.db
+# --- Hardonian bootstrap kit ---
+# Hardonian standard ignores
+!.env.template
+venv/
+target/
+.coverage
+htmlcov/
