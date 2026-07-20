@@ -1,8 +1,5 @@
 """Tests for configuration."""
 
-import os
-import pytest
-from pathlib import Path
 
 
 class TestSettings:
@@ -49,7 +46,7 @@ class TestSettings:
         settings = Settings()
         assert settings.alert_email_list == ["a@b.com", "c@d.com"]
 
-    def test_get_settings_singleton(self, monkeypatch):
+    def test_get_settings_singleton(self):
         """get_settings should return same instance."""
         from drift_inspector.config import get_settings
         s1 = get_settings()

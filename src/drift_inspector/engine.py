@@ -7,6 +7,7 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +19,7 @@ from drift_inspector.config import get_settings
 logger = structlog.get_logger(__name__)
 
 
-class DriftType(str):
+class DriftType(StrEnum):
     """Types of drift we can detect."""
     RESOURCE_ADDED = "resource_added"
     RESOURCE_REMOVED = "resource_removed"
@@ -27,7 +28,7 @@ class DriftType(str):
     METADATA_ONLY = "metadata_only"  # Ignored by default
 
 
-class Severity(str):
+class Severity(StrEnum):
     """Drift severity levels."""
     CRITICAL = "critical"    # Security group changes, IAM, data loss risk
     HIGH = "high"            # Compute changes, network config

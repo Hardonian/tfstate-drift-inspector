@@ -1,12 +1,13 @@
 """Tests for Slack integration."""
 
-import pytest
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from drift_inspector.config import Settings
+from drift_inspector.engine import DriftItem, DriftResult, DriftType, Severity
 from drift_inspector.slack_integration import SlackClient, SlackMessage
-from drift_inspector.engine import DriftResult, DriftItem, DriftType, Severity
-from datetime import datetime, timezone
 
 
 @pytest.fixture
@@ -28,7 +29,7 @@ def sample_result():
     return DriftResult(
         workspace_name="test-workspace",
         workspace_id="ws-123",
-        scanned_at=datetime.now(timezone.utc),
+        scanned_at=datetime.now(UTC),
         has_drift=True,
         drift_items=[
             DriftItem(
@@ -62,14 +63,13 @@ class TestSlackClient:
         result = DriftResult(
             workspace_name="clean",
             workspace_id="ws-456",
-            scanned_at=datetime.now(timezone.utc),
+            scanned_at=datetime.now(UTC),
             has_drift=False,
         )
         blocks = slack._build_drift_blocks(result, has_critical_high=False)
         assert len(blocks) > 0
 
-    @patch("drift_inspector.slack_integration.WebClient")
-    def test_send_message_success(self, mock_webclient, slack):
+    def test_send_message_success(self, slack):
         """Successful message send should return ok."""
         mock_client = MagicMock()
         mock_client.chat_postMessage.return_value = {"ts": "123.456", "channel": "#test"}

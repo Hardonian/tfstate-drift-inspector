@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import structlog
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
@@ -56,17 +57,19 @@ class HealthResponse(BaseModel):
 
 # --- Dependencies ---
 
-def get_db():
+def get_db() -> Database:
     settings = get_settings()
     db = Database(settings)
     db.create_tables()
     return db
 
-def get_engine():
+
+def get_engine() -> DriftEngine:
     settings = get_settings()
     return DriftEngine(settings)
 
-def get_github():
+
+def get_github() -> GitHubClient:
     settings = get_settings()
     return GitHubClient(settings)
 
@@ -85,7 +88,7 @@ async def trigger_scan(
     request: ScanRequest,
     db: Database = Depends(get_db),
     engine: DriftEngine = Depends(get_engine),
-):
+) -> dict[str, Any]:
     """Trigger a drift scan for a workspace."""
     path = Path(request.workspace_path)
     if not path.exists():
@@ -107,7 +110,7 @@ async def scan_all(
     request: WorkspaceList,
     db: Database = Depends(get_db),
     engine: DriftEngine = Depends(get_engine),
-):
+) -> dict[str, Any]:
     """Scan multiple workspaces."""
     configs = [{"name": w.name, "path": w.path} for w in request.workspaces]
     results = engine.scan_all_workspaces(configs)
@@ -137,7 +140,7 @@ async def get_history(
     workspace: str | None = None,
     limit: int = 20,
     db: Database = Depends(get_db),
-):
+) -> dict[str, Any]:
     """Get scan history."""
     scans = db.get_recent_scans(limit=limit, workspace_name=workspace)
     return {"scans": scans}
@@ -146,7 +149,7 @@ async def get_history(
 async def get_stats(
     days: int = 7,
     db: Database = Depends(get_db),
-):
+) -> dict[str, Any]:
     """Get aggregate statistics."""
     return db.get_workspace_stats(days=days)
 
@@ -156,7 +159,7 @@ async def github_webhook(
     x_hub_signature_256: str | None = Header(None),
     x_github_event: str | None = Header(None),
     github: GitHubClient = Depends(get_github),
-):
+) -> JSONResponse | dict[str, Any]:
     """Handle GitHub webhook events."""
     body = await request.body()
 
@@ -173,7 +176,7 @@ async def github_webhook(
         "workflow_run": handler.handle_workflow_run,
     }
 
-    handler_fn = event_handlers.get(x_github_event)
+    handler_fn = event_handlers.get(x_github_event or "")
     if handler_fn:
         result = handler_fn(payload)
         return JSONResponse(content=result)
@@ -183,7 +186,7 @@ async def github_webhook(
 @app.get("/api/v1/installations")
 async def list_installations(
     github: GitHubClient = Depends(get_github),
-):
+) -> dict[str, Any]:
     """List GitHub App installations."""
     try:
         installations = github.get_installations()
@@ -208,7 +211,7 @@ async def create_pr(
     installation_id: int,
     github: GitHubClient = Depends(get_github),
     db: Database = Depends(get_db),
-):
+) -> dict[str, Any]:
     """Create a remediation PR for a scan."""
     # Get scan items
     items = db.get_scan_items(scan_id)
