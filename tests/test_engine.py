@@ -1,9 +1,8 @@
 """Tests for drift_inspector engine."""
 
-import json
 import tempfile
+from datetime import UTC
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -147,13 +146,14 @@ class TestDriftResult:
     """Test DriftResult model."""
 
     def test_summary_counts(self):
-        from datetime import datetime, timezone
-        from drift_inspector.engine import DriftResult, DriftItem
+        from datetime import datetime
+
+        from drift_inspector.engine import DriftItem, DriftResult
 
         result = DriftResult(
             workspace_name="test",
             workspace_id="test-1",
-            scanned_at=datetime.now(timezone.utc),
+            scanned_at=datetime.now(UTC),
             has_drift=True,
             drift_items=[
                 DriftItem(
@@ -185,12 +185,13 @@ class TestDriftResult:
         assert result.summary["medium"] == 1
 
     def test_to_dict(self):
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from drift_inspector.engine import DriftResult
         result = DriftResult(
             workspace_name="test",
             workspace_id="test-1",
-            scanned_at=datetime.now(timezone.utc),
+            scanned_at=datetime.now(UTC),
             has_drift=False,
         )
         d = result.to_dict()

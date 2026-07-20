@@ -1,11 +1,12 @@
 """Tests for database models."""
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, timezone
 
 from drift_inspector.config import Settings
-from drift_inspector.models import Database, DriftScan
-from drift_inspector.engine import DriftResult, DriftItem, DriftType, Severity
+from drift_inspector.engine import DriftItem, DriftResult, DriftType, Severity
+from drift_inspector.models import Database
 
 
 @pytest.fixture
@@ -22,7 +23,7 @@ def sample_result():
     return DriftResult(
         workspace_name="test-workspace",
         workspace_id="ws-123",
-        scanned_at=datetime.now(timezone.utc),
+        scanned_at=datetime.now(UTC),
         has_drift=True,
         drift_items=[
             DriftItem(
@@ -89,7 +90,7 @@ class TestDatabase:
         result1 = DriftResult(
             workspace_name="ws1",
             workspace_id="1",
-            scanned_at=datetime.now(timezone.utc),
+            scanned_at=datetime.now(UTC),
             has_drift=True,
             drift_items=[
                 DriftItem(
@@ -103,7 +104,7 @@ class TestDatabase:
         result2 = DriftResult(
             workspace_name="ws2",
             workspace_id="2",
-            scanned_at=datetime.now(timezone.utc),
+            scanned_at=datetime.now(UTC),
             has_drift=False,
             drift_items=[],
         )
