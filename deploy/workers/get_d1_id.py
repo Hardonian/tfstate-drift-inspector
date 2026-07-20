@@ -1,4 +1,6 @@
-import sys, json
+import json
+import sys
+
 try:
     data = json.load(sys.stdin)
     if isinstance(data, list):
@@ -11,5 +13,5 @@ try:
             if d.get('name') == 'drift_inspector':
                 print(d.get('id') or d.get('uuid') or '')
                 break
-except Exception as e:
+except Exception:
     pass
