@@ -45,3 +45,6 @@ venv/
 target/
 .coverage
 htmlcov/
+
+# Cleanup additions
+.turbo
