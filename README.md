@@ -1,5 +1,9 @@
 # tfstate-drift-inspector
 
+<!-- BEGIN: REPO HERO -->
+![tfstate-drift-inspector — hero generated locally on the GPU stack](assets/repo-hero.png)
+<!-- END: REPO HERO -->
+
 **Status: Experimental / Proof-of-concept (v0.1.0)**
 
 Nightly Terraform drift detection with a CLI, Slack alerts, and GitHub remediation PRs.
