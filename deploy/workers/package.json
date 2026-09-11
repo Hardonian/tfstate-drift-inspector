@@ -16,7 +16,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240601.0",
     "jest": "^29.7.0",
-    "wrangler": "^4.105.0"
+    "wrangler": "^4.131.0"
   },
   "overrides": {
     "brace-expansion": ">=5.0.9",
